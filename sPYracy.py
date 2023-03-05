@@ -122,7 +122,7 @@ class CustomTkinter(customtkinter.CTk):
         self.scrollingText()
         self.Playing = customtkinter.CTkLabel(self.frame1, width=500, height=50, fg_color="gray10", bg_color="gray1")
         self.Playing.pack(pady=80)
-        self.Playing.configure(text = f"Currently Playing: {playing[20]} |")
+        self.Playing.configure(text = f"Currently Playing: {playing} |")
         self.spyracyl1 = customtkinter.CTkLabel(text="",master=self.frame1, image=self.sPYracy, corner_radius=10)
         self.spyracyl2 = customtkinter.CTkLabel(text="",master=self.frame2, image=self.sPYracy, corner_radius=10)
         self.spyracyl3 = customtkinter.CTkLabel(text="",master=self.frame3, image=self.sPYracy, corner_radius=10)
