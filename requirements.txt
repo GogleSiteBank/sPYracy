@@ -1,0 +1,6 @@
+customtkinter
+pygame
+yt_dlp
+youtube_search
+pillow
+typing
