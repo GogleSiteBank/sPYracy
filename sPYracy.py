@@ -43,7 +43,7 @@ x = 0
 def play():
     global playing, lastplayed, x
     for file in files:
-        playing = files[x] + "   |    "
+        playing = files[x] + "       "
         pygame.mixer.music.unload()
         pygame.mixer.music.load(files[x])
         pygame.mixer.music.play()
@@ -120,9 +120,11 @@ class CustomTkinter(customtkinter.CTk):
         self.Skip.place(x=300, y=30)
         self.thread()
         self.scrollingText()
-        self.Playing = customtkinter.CTkLabel(self.frame1, width=500, height=50, fg_color="gray10", bg_color="gray1")
-        self.Playing.pack(pady=80)
-        self.Playing.configure(text = f"Currently Playing: {playing} |")
+        self.frame = customtkinter.CTkFrame(master=self.frame1, height=55, width=500)
+        self.frame.pack(pady=80)
+        self.Playing = customtkinter.CTkLabel(self.frame, font=("Arial", 15, "bold") ,width=300)
+        self.Playing.place(anchor=customtkinter.CENTER, relx=0.5, rely=0.5)
+        self.Playing.configure(text = f"Currently Playing:\n {playing}")
         self.spyracyl1 = customtkinter.CTkLabel(text="",master=self.frame1, image=self.sPYracy, corner_radius=10)
         self.spyracyl2 = customtkinter.CTkLabel(text="",master=self.frame2, image=self.sPYracy, corner_radius=10)
         self.spyracyl3 = customtkinter.CTkLabel(text="",master=self.frame3, image=self.sPYracy, corner_radius=10)
@@ -141,7 +143,7 @@ class CustomTkinter(customtkinter.CTk):
     def update(self):
         try:
             threading.Timer(0.1, self.update).start()
-            self.Playing.configure(text = f"Currently Playing: {playing} ")
+            self.Playing.configure(text = f"Currently Playing:\n {playing}")
         except RuntimeError:
             sys.exit(0)
 
