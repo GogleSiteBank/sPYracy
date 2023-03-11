@@ -7,23 +7,27 @@ from PIL import Image
 import pygame
 import threading
 from typing import Optional
+import random
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b)
 import sys
 
 filetypes = [".flac", ".mp3", ".ogg", ".wav", ".wma", ".aac", ".m4a", ".m4b", ".m4p", ".m4r", ".m4v", ".mid", ".midi", ".midiin", ".midiout", ".mp4", ".mpg", ".mpeg", ".mpg4"]
 
-filetype = "flac"
+filetype = filetypes[0]
 
 config = {""}
 
+toDownload = []
+
 def updateconfig():
+    global config
     config = {
         'outtmpl': '%(title)s',
         'format': 'bestaudio/best',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
-            'preferredcodec': filetype,
+            'preferredcodec': filetype.replace(".", ""),
         }]
     }
 
@@ -39,6 +43,9 @@ for file in os.listdir():
 
 x = 0
 
+def shuffle():
+    random.shuffle(files)
+    play()
 
 def play():
     global playing, lastplayed, x
@@ -98,6 +105,7 @@ class CustomTkinter(customtkinter.CTk):
         self.skip = customtkinter.CTkImage(light_image=Image.open(os.path.join(image_path, "Skip.png")))
         self.previous = customtkinter.CTkImage(light_image=Image.open(os.path.join(image_path, "Previous.png")))
         self.sPYracy = customtkinter.CTkImage(Image.open(os.path.join(image_path, "Image.png")), size=(520, 225))
+        self.shuffleicon = customtkinter.CTkImage(light_image=Image.open(os.path.join(image_path, "shuffle-64.png")),)
 
         self.Streaming = customtkinter.CTkButton(self.navigation_frame, image=self.streamingicon, corner_radius=0, height=40, border_spacing=10, text="Streaming", fg_color="transparent", text_color=("gray10", "gray90"), hover_color=("gray70", "gray30"), anchor="w", command=self.streaming)
         self.Streaming.grid(row=1, column=0, sticky="ew")
@@ -111,17 +119,20 @@ class CustomTkinter(customtkinter.CTk):
         self.frame3 = customtkinter.CTkFrame(self, corner_radius=0, fg_color="transparent", width=100, height=100)
         self.streaming()
 
-        ################ End of Page Frames ################
+        ################ End of Page Frames ################    
         self.Previous = customtkinter.CTkButton(self.frame1, image=self.previous, corner_radius=10, height=40, border_spacing=10, text="", fg_color="transparent", width=16, hover_color=rgb(50, 50,50), command=self.previousSong)
-        self.Previous.place(x=200, y=30)
+        self.Previous.place(x=175, y=14)
+        self.Shuffle = customtkinter.CTkButton(self.frame1, image=self.shuffleicon, corner_radius=10, height=40, border_spacing=10, text="", fg_color="transparent", width=16, hover_color=rgb(50, 50,50), command=self.shuffleExec)
+        self.Shuffle.place(x=275, y=14)
         self.Play = customtkinter.CTkButton(self.frame1, image=self.pause, corner_radius=10, height=40, border_spacing=10, text="", fg_color="transparent", width=16, hover_color=rgb(50, 50,50), command=self.playSong)
-        self.Play.place(x=250, y=30)
+        self.Play.place(x=225, y=14) 
         self.Skip = customtkinter.CTkButton(self.frame1, image=self.skip, corner_radius=10, height=40, border_spacing=10, text="", fg_color="transparent", width=16, hover_color=rgb(50, 50, 50), command=self.skipSong)
-        self.Skip.place(x=300, y=30)
+        self.Skip.place(x=325, y=14) 
         self.thread()
         self.scrollingText()
         self.frame = customtkinter.CTkFrame(master=self.frame1, height=55, width=500)
         self.frame.pack(pady=80)
+        print(self.frame1.winfo_geometry())
         self.Playing = customtkinter.CTkLabel(self.frame, font=("Arial", 15, "bold") ,width=300)
         self.Playing.place(anchor=customtkinter.CENTER, relx=0.5, rely=0.5)
         self.Playing.configure(text = f"Currently Playing:\n {playing}")
@@ -136,10 +147,11 @@ class CustomTkinter(customtkinter.CTk):
         self.filetype = customtkinter.CTkOptionMenu(self.frame3, values=filetypes, width=500, height=30, fg_color=rgb(50,50,50), button_color=rgb(31,31,31), command=self.fileType)
         self.filetype.place(x=25, y=30)
         self.filetype.set(f"Select a File Type. (current: {filetype})")
-        self.download = customtkinter.CTkButton(self.frame2, image=self.downloadicon, corner_radius=10, height=40, border_spacing=1, width=500, hover_color=rgb(50, 50,50), fg_color=rgb(31,31,31), text="Download", command=self.download)
+        self.download = customtkinter.CTkButton(self.frame2, image=self.downloadicon, corner_radius=10, height=40, border_spacing=1, width=500, hover_color=rgb(50, 50,50), fg_color=rgb(31,31,31), text="Download", command=self.downloada)
         self.download.place(x=25, y=90)
         self.update()
-
+    def shuffleExec(self):
+        shuffle()
     def update(self):
         try:
             threading.Timer(0.1, self.update).start()
@@ -224,7 +236,6 @@ class CustomTkinter(customtkinter.CTk):
         f.write(json.dumps({"filetype": s}))
         updateconfig()
 
-    toDownload = []
     def downloadFLACs(self):
         global toDownload
         for FLAC in toDownload:
@@ -243,22 +254,20 @@ class CustomTkinter(customtkinter.CTk):
                 if file.endswith(tuple(filetypes)):
                     files.append(file)
 
-    def download(self):
+    def downloada(self):
         global toDownload
         pos = 0
         toDownload.clear()
         text = self.flacdownloader.get()
-        for l in text:
-            pos += 1
-            if ":" in text:
-                if l == ":":
-                    toDownload.clear()
-                    toDownload.append(text.split(":", pos))
-                    self.downloadFLACs()
-            else:
-                toDownload.append(text)
-                self.downloadFLACs()
-                break
+        if ":" in text:
+            toDownload.clear()
+            for s in text.split(":"):
+                toDownload.append(s)
+            self.downloadFLACs()
+        else:
+            toDownload.clear()
+            toDownload.append(text)
+            self.downloadFLACs()
 try:
     f = open("config.json", "r")
     filetype = json.loads(f.read())["filetype"]
