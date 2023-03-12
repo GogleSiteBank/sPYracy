@@ -4,3 +4,5 @@ yt_dlp
 youtube_search
 pillow
 typing
+time
+sys
