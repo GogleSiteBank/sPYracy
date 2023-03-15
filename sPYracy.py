@@ -121,9 +121,7 @@ def play():
         except IndexError:
             print("Songs have ended.")
         except Exception as e:
-            print("some sort of erorr")
-            f = open("badaksljdj\adlkjd.txt", "a")
-            f.write(str(e) + "\n")
+            print(e)
     else:
         try:
             for file in files:
@@ -139,9 +137,7 @@ def play():
             x = 0
             play()
         except Exception as e:
-            print("some sort of erorr")
-            f = open("badaksljdj\adlkjd.txt", "a")
-            f.write(str(e) + "\n")
+            print(e)
 
 
 def previous():
