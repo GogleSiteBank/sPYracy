@@ -20,7 +20,6 @@ import webbrowser
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b)
 
-
 filetypes = [
     ".flac",
     ".mp3",
@@ -55,7 +54,7 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.3.0"
+version = "2.3.1"
 url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
 d = requests.get(url).content.decode("utf-8").replace("\n", "")
 print(f"{d} is latest version.")
@@ -399,6 +398,12 @@ class CustomTkinter(customtkinter.CTk):
             font=customtkinter.CTkFont("Gotham", 24, "bold")
         )
         self.Ver.place(relx=0.5, rely=0.3, anchor=customtkinter.CENTER)
+        self.workingdir = customtkinter.CTkLabel(
+            self.frame3,
+            text=f"Working Directory: {os.getcwd()}",
+            font=customtkinter.CTkFont("Gotham", 15, "bold")
+        )
+        self.workingdir.pack()
         self.download = customtkinter.CTkButton(
             self.frame2,
             image=self.downloadicon,
@@ -422,9 +427,10 @@ class CustomTkinter(customtkinter.CTk):
         global files
         files.clear()
         dir = filedialog.askdirectory(title="Select Music Directory")
+        os.chdir(dir)
         for file in os.listdir(dir):
             if file.endswith(tuple(filetypes)):
-                files.append(file)
+                files.append(f"{dir}/" + file)
         play()
 
     def shuffleExec(self):
