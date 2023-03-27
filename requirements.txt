@@ -6,3 +6,4 @@ pillow
 typing
 time
 sys
+argparse
