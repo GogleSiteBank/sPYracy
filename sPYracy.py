@@ -16,6 +16,7 @@ import string
 import requests
 from tkinter import messagebox
 import webbrowser
+import argparse
 
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b)
@@ -45,7 +46,46 @@ filetypes = [
 os.system("")
 
 #####################################################################
+args = argparse.ArgumentParser(
+    prog=None,
+    description=None
+)
+
+options = [
+    "looped",
+    "paused",
+    "dir", "directory"
+]
+
+post = [
+    "y",
+    "yes",
+    "1",
+    "true"
+]
+
+posf = [
+    "n",
+    "no",
+    "0",
+    "false"
+]
+
 loop = True
+paused = False
+for option in options:
+    args.add_argument(f"-{option}")
+
+zz = args.parse_args()
+
+if zz.looped in post: loop = True; print("Loop Enabled via CLI.")
+elif zz.looped in posf: loop = False; print("Loop disabled via CLI.")
+if zz.paused in post: paused = True; print("Paused via CLI.")
+elif zz.paused in posf: paused = False; print("Unpaused via CLI.")
+if zz.dir or zz.directory:
+    for _ in os.listdir(zz.dir):
+        print(_)
+
 
 try:
     f = open("config.json", "r")
@@ -54,18 +94,20 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.3.1"
-url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
-d = requests.get(url).content.decode("utf-8").replace("\n", "")
-print(f"{d} is latest version.")
-print(f"{version} is currently installed.")
-if version != d:
-    update = messagebox.askokcancel("New Update Available", "New version of sPYracy is available. Please update to the latest version")
-    if update:
-        u = "https://github.com/gogleSiteBank/spyracy/releases/latest/download/sPYracy.zip"
-        webbrowser.open(u)
-        sys.exit()
-        
+version = "2.3.2"
+try:
+    url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
+    d = requests.get(url).content.decode("utf-8").replace("\n", "")
+    print(f"{d} is latest version.")
+    print(f"{version} is currently installed.")
+    if version != d:
+        update = messagebox.askokcancel("New Update Available", "New version of sPYracy is available. Please update to the latest version")
+        if update:
+            u = "https://github.com/gogleSiteBank/spyracy/releases/latest/download/sPYracy.zip"
+            webbrowser.open(u)
+            sys.exit()
+except:
+    print("Aborting update check, no internet connection...")
 
 config = {""}
 
@@ -112,7 +154,6 @@ def play():
                 playing = files[x] + "       "
                 forlength = files[x]
                 pygame.mixer.music.unload()
-                time.sleep(0.1)
                 pygame.mixer.music.load(files[x])
                 pygame.mixer.music.play()
                 x += 1
@@ -127,7 +168,6 @@ def play():
                 playing = files[x] + "       "
                 forlength = files[x]
                 pygame.mixer.music.unload()
-                time.sleep(0.1)
                 pygame.mixer.music.load(files[x])
                 pygame.mixer.music.play()
                 x += 1
@@ -152,22 +192,17 @@ def previous():
         break
 
 
-paused = False
 
 
 def skip():
     play()
-
-
-play()
-
 
 class CustomTkinter(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.geometry("700x450")
         self.resizable(False, False)
-        self.title("sPYracy v2.3.0")
+        self.title(f"sPYracy v{version}")
         path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "images/online-16.ico"
         )
@@ -184,7 +219,6 @@ class CustomTkinter(customtkinter.CTk):
         )
         self.Title.grid(row=0, column=0, padx=20, pady=15)
         ################ Start of Page Frames ################
-
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 
         self.streamingicon = customtkinter.CTkImage(
@@ -550,9 +584,7 @@ class CustomTkinter(customtkinter.CTk):
                 )
                 print(f"Error occured, saved to {name}")
                 break
-            for file in os.listdir():
-                if file.endswith(tuple(filetypes)):
-                    files.append(file)
+        print("[Spyracy] Songs downloaded successfully, reload the application to load them or load the directory again. (This is to prevent SegFaults :( )")
 
     def downloada(self):
         global toDownload
@@ -568,6 +600,5 @@ class CustomTkinter(customtkinter.CTk):
             toDownload.clear()
             toDownload.append(text)
             self.downloadFLACs()
-
 
 CustomTkinter().mainloop()
