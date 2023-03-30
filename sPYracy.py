@@ -54,7 +54,8 @@ args = argparse.ArgumentParser(
 options = [
     "looped",
     "paused",
-    "dir", "directory"
+    "dir", "directory",
+    "bypass_updates"
 ]
 
 post = [
@@ -86,24 +87,27 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.3.3"
-try:
-    url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
-    d = requests.get(url).content.decode("utf-8").replace("\n", "")
-    print(f"[Spyracy] {d} is latest version.")
-    print(f"[Spyracy] {version} is currently installed.")
-    if version < d: ## latest greater than version
-        update = messagebox.askokcancel("New Update Available", "New version of sPYracy is available. Please update to the latest version")
-        if update:
-            u = "https://github.com/gogleSiteBank/spyracy/releases/latest/download/sPYracy.zip"
-            webbrowser.open(u)
-            sys.exit()
-    else: ## latest less than version or equal
-        if version > d:
-            msg = messagebox.showwarning("Unstable version of sPYracy", "This version of sPYracy is higher than the latest version.")
-except:
-    print(f"[Spyracy] Aborting update check, no internet connection...")
+version = "2.3.4"
 
+if not zz.bypass_updates in post:
+    try:
+        url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
+        d = requests.get(url).content.decode("utf-8").replace("\n", "")
+        print(f"[Spyracy] {d} is latest stable version.")
+        print(f"[Spyracy] {version} is currently installed.")
+        if version < d: ## latest greater than version
+            update = messagebox.askokcancel("New Update Available", "New version of sPYracy is available. Please update to the latest version")
+            if update:
+                u = "https://github.com/gogleSiteBank/spyracy/releases/latest/download/sPYracy.zip"
+                webbrowser.open(u)
+                sys.exit()
+        else: ## latest less than version or equal
+            if version > d:
+                msg = messagebox.showwarning("Unstable version of sPYracy", "This version of sPYracy is higher than the latest stable version.")
+    except:
+        print(f"[Spyracy] Aborting update check, no internet connection...")
+elif zz.bypass_updates in post:
+    print("[Spyracy] Update check aborted: \"bypass_updates\" flag used")
 config = {""}
 
 toDownload = []
@@ -425,7 +429,7 @@ class CustomTkinter(customtkinter.CTk):
             text=f"Version: {version}",
             font=customtkinter.CTkFont("Gotham", 24, "bold")
         )
-        self.Ver.place(relx=0.5, rely=0.3, anchor=customtkinter.CENTER)
+        self.Ver.place(relx=0.5, rely=0.4, anchor=customtkinter.CENTER)
         self.workingdir = customtkinter.CTkLabel(
             self.frame3,
             text=f"Working Directory: {os.getcwd()}",
@@ -438,7 +442,22 @@ class CustomTkinter(customtkinter.CTk):
             fg_color=rgb(50,50,50),
             hover_color=rgb(31,31,31),
             command=self.load
-        ); self.Upd.place(relx=0.5, rely=0.2, anchor=customtkinter.CENTER)
+        ); self.Upd.place(relx=0.075, rely=0.18)
+        self.force = customtkinter.CTkOptionMenu(
+            self.frame3,
+            values=files,
+            fg_color=rgb(50,50,50),
+            button_color=rgb(31,31,31),
+            command=self.forcesong
+        ); self.force.set("Force Song"); self.force.place(relx=0.65, rely=0.18)
+        self.LoadSongs = customtkinter.CTkButton(
+            self.frame3,
+            fg_color=rgb(50,50,50),
+            hover_color=rgb(31,31,31),
+            text="Download Songs via File",
+            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            command=self.readfile
+        ); self.LoadSongs.place(relx=0.5, rely=0.3, anchor=customtkinter.CENTER)
         self.workingdir.pack()
         self.download = customtkinter.CTkButton(
             self.frame2,
@@ -455,6 +474,35 @@ class CustomTkinter(customtkinter.CTk):
         self.download.place(x=25, y=90)
         self.update()
         self.isclipause()
+    def readfile(self):
+        global toDownload
+        file = filedialog.askopenfilename()
+        try:
+            with open(file, "r") as f:
+                try:
+                    toDownload.clear()
+                    for _ in f.readlines():
+                        toDownload.append(_)
+                    self.downloadFLACs()
+                except Exception as e:
+                    name = random.choices(string.ascii_letters, k=12)
+                    a = open(name, "a")
+                    print("[Spyracy] Unexpected error. Saved to %s" % name)
+                    a.write(e)
+                    a.close()
+        except FileNotFoundError:
+            prinnt("[Spyracy] Operation aborted.")
+    def forcesong(self, song):
+        global playing, forlength, paused
+        pygame.mixer.music.unload()
+        pygame.mixer.music.load(song)
+        pygame.mixer.music.play()
+        self.force.set("Force Song")
+        playing = song + "       "
+        forlength = song
+        self.update()
+        self.Play.configure(image=self.pause)
+        paused = False
     def load(self):
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
@@ -463,6 +511,7 @@ class CustomTkinter(customtkinter.CTk):
             if file.endswith(tuple(filetypes)):
                 files.append(file)
         play()
+        self.force.configure(values=files)
     def loop(self):
         global loop
         loop = not loop
