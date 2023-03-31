@@ -87,7 +87,7 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.3.4"
+version = "2.4.0"
 
 if not zz.bypass_updates in post:
     try:
@@ -394,6 +394,19 @@ class CustomTkinter(customtkinter.CTk):
         )
         self.Playing.place(anchor=customtkinter.CENTER, relx=0.5, rely=0.5)
         self.Playing.configure(text=f"Currently Playing:\n {playing}")
+        self.Search = customtkinter.CTkEntry(
+            self.frame1,
+            placeholder_text="Input song/audio query",
+            width=400
+        ); self.Search.place(relx=0.045, rely=0.355)
+        self.Confirm = customtkinter.CTkButton(
+            self.frame1,
+            fg_color=rgb(50,50,50),
+            hover_color=rgb(30,30,30),
+            text="Search",
+            width=90,
+            command=self.search
+        ); self.Confirm.place(relx=0.79, rely=0.355)
         self.spyracyl1 = customtkinter.CTkLabel(
             text="", master=self.frame1, image=self.sPYracy, corner_radius=10
         )
@@ -488,10 +501,18 @@ class CustomTkinter(customtkinter.CTk):
                     name = random.choices(string.ascii_letters, k=12)
                     a = open(name, "a")
                     print("[Spyracy] Unexpected error. Saved to %s" % name)
-                    a.write(e)
+                    a.write(e)  
                     a.close()
         except FileNotFoundError:
-            prinnt("[Spyracy] Operation aborted.")
+            print("[Spyracy] Operation aborted.")
+    def search(self):
+        i = self.Search.get()
+        results = str(search(i, max_results=10).to_dict())
+        sub = results.split("title")[1]
+        sub = sub.split("',")[0]
+        final = sub.replace("': '", "")
+        print(f"[Spyracy] Entering \"{i}\" would download the song/audio : \"{final}\"")
+        
     def forcesong(self, song):
         global playing, forlength, paused
         pygame.mixer.music.unload()
@@ -510,7 +531,7 @@ class CustomTkinter(customtkinter.CTk):
         for file in os.listdir():
             if file.endswith(tuple(filetypes)):
                 files.append(file)
-        play()
+        if paused == False: play()
         self.force.configure(values=files)
     def loop(self):
         global loop
@@ -519,13 +540,16 @@ class CustomTkinter(customtkinter.CTk):
         if loop == True: print("[Spyracy] Looping ON")
     def open(self):
         global files
-        files.clear()
-        dir = filedialog.askdirectory(title="Select Music Directory")
-        os.chdir(dir)
-        for file in os.listdir(dir):
-            if file.endswith(tuple(filetypes)):
-                files.append(f"{dir}/" + file)
-        play()
+        try:
+            dir = filedialog.askdirectory(title="Select Music Directory")
+            os.chdir(dir)
+            files.clear()
+            for file in os.listdir():
+                if file.endswith(tuple(filetypes)):
+                    files.append(f"{dir}/" + file)
+            if paused == False: play()
+        except:
+            print("[Spyracy] Operation aborted")
 
     def shuffleExec(self):
         shuffle()
@@ -561,7 +585,7 @@ class CustomTkinter(customtkinter.CTk):
         if zz.dir or zz.directory:
             files.clear()
             os.chdir(zz.dir)
-            for file in os.listdir(dir):
+            for file in os.listdir():
                 if file.endswith(tuple(filetypes)):
                     files.append(f"{dir}/" + file)
     def previousSong(self):
