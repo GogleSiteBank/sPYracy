@@ -1,23 +1,88 @@
-import json
+import os, sys
+os.system("")
+sprefix = "\033[35m[Spyracy]\033[33m"
+dependencies = [
+    "youtube_search",
+    "yt_dlp",
+    "customtkinter",
+    "PIL",
+    "pygame",
+    ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
+    "json",
+    "typing",
+    "threading",
+    "time",
+    "tkinter",
+    "string",
+    "random",
+    "requests",
+    "webbrowser",
+    "argparse"
+]
+
+dpstdout = {
+    "youtube_search": "Youtube Search",
+    "yt_dlp": "YT-DLP",
+    "customtkinter": "Customtkinter",
+    "PIL": "PIL/Pillow",
+    "pygame": "PyGame",
+    ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
+    "json": "Json",
+    "typing": "Typing",
+    "threading": "Threading",
+    "time": "Time",
+    "tkinter": "Tkinter",
+    "string": "String",
+    "random": "Random",
+    "requests": "Requests",
+    "webbrowser": "Web Browser",
+    "argparse": "Arg Parse"
+}
+
+def load_dependencies():
+    print(f"{sprefix} Loading dependencies...\033[0m")
+    for _ in dependencies:
+        if _ != "pygame":
+            try:
+                exec(f"import {_}")
+                print(f"{sprefix} {dpstdout[_]} found.\033[0m")
+            except ModuleNotFoundError:
+                print(f"{sprefix} {dpstdout[_]} not found, installing...\033[0m")
+                os.system(f"pip install {_}")
+        else:
+            if _ == "PyGame":
+                try:
+                    f = open(os.devnull, 'w')
+                    sys.stdout = f
+                    import pygame
+                    sys.stdout = sys.__stdout__
+                    print(f"{sprefix} PyGame found.\033[0m")
+                except ModuleNotFoundError:
+                    print(f"{sprefix} PyGame not found, installing...\033[0m")
+                    os.system("pip install pygame")
+    print(f"{sprefix} Dependencies loaded!\033[0m")
+load_dependencies()
 from youtube_search import YoutubeSearch as search
+import json
 import yt_dlp
 import customtkinter
 import os
 from PIL import Image
+f = open(os.devnull, 'w')
+sys.stdout = f
 import pygame
+sys.stdout = sys.__stdout__
 import threading
 from typing import Optional
 import random
 import time
 import os
-import sys
 from tkinter import filedialog
 import string
 import requests
 from tkinter import messagebox
 import webbrowser
 import argparse
-
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b) ## % 1 = r, % 2 = g, % 3 = b. 02x = hex per
 
@@ -42,10 +107,11 @@ filetypes = [
     ".mpeg",
     ".mpg4",
 ]
+if sys.platform == "win32":
+    print(f"{sprefix} Running on Windows. This is the most frequently used & updated platform.\033[0m")
+else:
+    print(f"\033[31mWARNING: You are running sPYracy Windows edition on a platform that is not Windows. ({sys.platform})\033[0m")
 
-os.system("")
-
-#####################################################################
 args = argparse.ArgumentParser(
     prog=None,
     description=None
@@ -55,7 +121,7 @@ options = [
     "looped",
     "paused",
     "dir", "directory",
-    "bypass_updates"
+    "-bypass_updates"
 ]
 
 post = [
@@ -87,27 +153,27 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.4.0"
+version = "2.4.1"
 
 if not zz.bypass_updates in post:
     try:
         url = "https://raw.githubusercontent.com/GogleSiteBank/sPYracyLatestVersion/main/latest"
         d = requests.get(url).content.decode("utf-8").replace("\n", "")
-        print(f"[Spyracy] {d} is latest stable version.")
-        print(f"[Spyracy] {version} is currently installed.")
-        if version < d: ## latest greater than version
+        print(f"{sprefix} {d} is latest stable version.\033[0m")
+        print(f"{sprefix} {version} is currently installed.\033[0m")
+        if version < d: 
             update = messagebox.askokcancel("New Update Available", "New version of sPYracy is available. Please update to the latest version")
             if update:
                 u = "https://github.com/gogleSiteBank/spyracy/releases/latest/download/sPYracy.zip"
                 webbrowser.open(u)
                 sys.exit()
-        else: ## latest less than version or equal
+        else: 
             if version > d:
                 msg = messagebox.showwarning("Unstable version of sPYracy", "This version of sPYracy is higher than the latest stable version.")
     except:
-        print(f"[Spyracy] Aborting update check, no internet connection...")
+        print(f"{sprefix} Aborting update check, no internet connection...\033[0m")
 elif zz.bypass_updates in post:
-    print("[Spyracy] Update check aborted: \"bypass_updates\" flag used")
+    print(f"{sprefix} Update check aborted: \"bypass_updates\" flag used\033[0m")
 config = {""}
 
 toDownload = []
@@ -133,13 +199,14 @@ playing = ""
 pygame.mixer.init()
 lastplayed = ""
 forlength = ""
-for file in os.listdir():
+directory = os.getcwd()
+for file in os.listdir(directory):
     if file.endswith(tuple(filetypes)):
         files.append(file)
-
 x = 0
 
-
+if files == []:
+    print(f"{sprefix} There are no music files in your current directory, open a directory with music files by clicking the files icon.\033[0m")
 def shuffle():
     random.shuffle(files)
     play()
@@ -158,9 +225,9 @@ def play():
                 x += 1
                 break
         except IndexError:
-            print("[Spyracy] Songs have ended.")
+            print(f"{sprefix} Songs have ended.\033[0m")
         except Exception as e:
-            print(f"[Spyracy] unexpected error! \n{e}")
+            print(f"{sprefix} unexpected error! \n{e}\033[0m")
     else:
         try:
             for file in files:
@@ -175,8 +242,9 @@ def play():
             x = 0
             play()
         except Exception as e:
-            print(f"[Spyracy] unexpected error! \n{e}")
+            print(f"{sprefix} unexpected error! \n{e}\033[0m")
 
+play()
 
 def previous():
     global playing, lastplayed, x, forlength
@@ -202,13 +270,14 @@ class CustomTkinter(customtkinter.CTk):
         self.geometry("700x450")
         self.resizable(False, False)
         self.title(f"sPYracy v{version}")
-        path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "images/online-16.ico"
-        )
-        self.iconbitmap("online-16.ico")
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+        try:
+            self.iconbitmap("online-16.ico")
+        except:
+            print(f"{sprefix} Running from a terminal not in the same directory as \"sPYracy.py\" could lead to issues, be warned.\033[0m")
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        self._set_appearance_mode("Dark")
+        customtkinter.set_appearance_mode("dark")
         self.navigation_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
         self.navigation_frame.grid_rowconfigure(4, weight=1)
@@ -217,9 +286,7 @@ class CustomTkinter(customtkinter.CTk):
             self.navigation_frame, text="sPYracy", font=("Arial", 20, "bold")
         )
         self.Title.grid(row=0, column=0, padx=20, pady=15)
-        ################ Start of Page Frames ################
-        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-
+        
         self.streamingicon = customtkinter.CTkImage(
             light_image=Image.open(os.path.join(image_path, "online-64.png")),
         )
@@ -306,7 +373,7 @@ class CustomTkinter(customtkinter.CTk):
             self, corner_radius=0, fg_color="transparent", width=100, height=100
         )
         self.streaming()
-        ################ End of Page Frames ################
+        
         self.Loop = customtkinter.CTkButton(
             self.frame1,
             image=self.loopicon,
@@ -470,7 +537,23 @@ class CustomTkinter(customtkinter.CTk):
             text="Download Songs via File",
             font=customtkinter.CTkFont("Gotham", 15, "bold"),
             command=self.readfile
-        ); self.LoadSongs.place(relx=0.5, rely=0.3, anchor=customtkinter.CENTER)
+        ); self.LoadSongs.place(relx=0.18, rely=0.3, anchor=customtkinter.CENTER)
+        self.StartUp = customtkinter.CTkButton(
+            self.frame3,
+            fg_color=rgb(50,50,50),
+            hover_color=rgb(31,31,31),
+            text="Toggle load on startup",
+            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            command=self.togglestartup
+        ); self.StartUp.place(relx=0.525, rely=0.3, anchor=customtkinter.CENTER)
+        self.RecreateStartup = customtkinter.CTkButton(
+            self.frame3,
+            fg_color=rgb(50,50,50),
+            hover_color=rgb(31,31,31),
+            text="Recreate Startup file",
+            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            command=self.create_startup
+        ); self.RecreateStartup.place(relx=0.85, rely=0.3, anchor=customtkinter.CENTER)
         self.workingdir.pack()
         self.download = customtkinter.CTkButton(
             self.frame2,
@@ -487,6 +570,34 @@ class CustomTkinter(customtkinter.CTk):
         self.download.place(x=25, y=90)
         self.update()
         self.isclipause()
+    def togglestartup(self):
+        appdata = os.getenv("Appdata")
+        dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
+        i = 0
+        ii = 0
+        for file in os.listdir(dir):
+            i += 1
+        for file in os.listdir(dir):
+            ii += 1
+            if file == "sPYracy_StartupProgram.py":
+                os.remove(f"{dir}/{file}")
+                print(f"{sprefix} Startup file disabled.\033[0m")
+                break
+            if ii == i:
+                ### os.system(f"copy {__file__} \"{dir}/sPYracy_StartupProgram.py\"") -- old method, this works but we need to change the working directory to here to allow images & songs to load.
+                fixedcwd = os.getcwd().replace("\\", "/")
+                fixedfile = __file__.replace("\\", "/")
+                with open(f"{dir}/sPYracy_StartupProgram.py", "w") as f:
+                    f.write(f"import os\nos.chdir(\"{fixedcwd}\")\nos.system(\'python \"{fixedfile}\"')")
+                print(f"{sprefix} Startup file created/enabled.\033[0m")
+    def create_startup(self):
+        appdata = os.getenv("Appdata")
+        dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
+        fixedcwd = os.getcwd().replace("\\", "/")
+        fixedfile = __file__.replace("\\", "/")
+        with open(f"{dir}/sPYracy_StartupProgram.py", "w") as f:
+            f.write(f"import os\nos.chdir(\"{fixedcwd}\")\nos.system('python \"{fixedfile}\"\')")
+        print(f"{sprefix} Startup file recreated.\033[0m")
     def readfile(self):
         global toDownload
         file = filedialog.askopenfilename()
@@ -500,30 +611,30 @@ class CustomTkinter(customtkinter.CTk):
                 except Exception as e:
                     name = random.choices(string.ascii_letters, k=12)
                     a = open(name, "a")
-                    print("[Spyracy] Unexpected error. Saved to %s" % name)
+                    print(f"{sprefix} Unexpected error. Saved to %s\033[0m" % name)
                     a.write(e)  
                     a.close()
         except FileNotFoundError:
-            print("[Spyracy] Operation aborted.")
+            print(f"{sprefix} Operation aborted.\033[0m")
     def search(self):
         i = self.Search.get()
         results = str(search(i, max_results=10).to_dict())
         sub = results.split("title")[1]
         sub = sub.split("',")[0]
         final = sub.replace("': '", "")
-        print(f"[Spyracy] Entering \"{i}\" would download the song/audio : \"{final}\"")
+        print(f"{sprefix} Entering \"{i}\" would download the song/audio : \"{final}\"\033[0m")
         
     def forcesong(self, song):
-        global playing, forlength, paused
+        pygame.mixer.music.stop()
         pygame.mixer.music.unload()
-        pygame.mixer.music.load(song)
-        pygame.mixer.music.play()
-        self.force.set("Force Song")
-        playing = song + "       "
-        forlength = song
-        self.update()
-        self.Play.configure(image=self.pause)
-        paused = False
+        files.clear()
+        files.append(song)
+        for file in os.listdir():
+            if file.endswith(tuple(filetypes)):
+                if file != song:
+                    files.append(file)
+        if paused == False: play()
+        self.force.configure(values=files)
     def load(self):
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
@@ -536,20 +647,23 @@ class CustomTkinter(customtkinter.CTk):
     def loop(self):
         global loop
         loop = not loop
-        if loop == False: print("[Spyracy] Looping OFF")
-        if loop == True: print("[Spyracy] Looping ON")
+        if loop == False: print(f"{sprefix} Looping OFF\033[0m")
+        if loop == True: print(f"{sprefix} Looping ON\033[0m")
     def open(self):
         global files
         try:
             dir = filedialog.askdirectory(title="Select Music Directory")
+            print(f"{sprefix} Opening directory: %s\033[0m" % dir)
             os.chdir(dir)
             files.clear()
             for file in os.listdir():
                 if file.endswith(tuple(filetypes)):
-                    files.append(f"{dir}/" + file)
+                    files.append(file)
+            print(f"{sprefix} Working Directory has been changed: %s\033[0m" % os.getcwd())
+            self.workingdir.configure(text=f"Working Directory: {os.getcwd()}\033[0m")
             if paused == False: play()
         except:
-            print("[Spyracy] Operation aborted")
+            print(f"{sprefix} Operation aborted\033[0m")
 
     def shuffleExec(self):
         shuffle()
@@ -578,10 +692,10 @@ class CustomTkinter(customtkinter.CTk):
 
     def isclipause(self):
         global loop, files
-        if zz.looped in post: loop = True; print("[Spyracy] Loop Enabled via CLI.")
-        elif zz.looped in posf: loop = False; print("[Spyracy] Loop disabled via CLI.")
-        if zz.paused in post: self.playSong(); print("[Spyracy] Paused via CLI.")
-        elif zz.paused in posf: print("[Spyracy] Unpaused via CLI.")
+        if zz.looped in post: loop = True; print(f"{sprefix} Loop Enabled via CLI.\033[0m")
+        elif zz.looped in posf: loop = False; print(f"{sprefix} Loop disabled via CLI.\033[0m")
+        if zz.paused in post: self.playSong(); print(f"{sprefix} Paused via CLI.\033[0m")
+        elif zz.paused in posf: print(f"{sprefix} Unpaused via CLI.\033[0m")
         if zz.dir or zz.directory:
             files.clear()
             os.chdir(zz.dir)
@@ -645,7 +759,9 @@ class CustomTkinter(customtkinter.CTk):
             if pygame.mixer.music.get_busy():
                 pass
             else:
-                play()
+                if len(forlength) > 0:
+                    play()
+                    print(f"{sprefix} Song \"{forlength}\" is now playing. \033[0m")
 
     def fileType(self, s: str):
         global filetype
@@ -669,18 +785,18 @@ class CustomTkinter(customtkinter.CTk):
                     down.download([song])
             except yt_dlp.utils.DownloadError as e:
                 print(
-                    f"\x1b[31m[Spyracy] FFmpeg is not installed, please install here: https://ffmpeg.org/"
+                    f"\x1b[31m{sprefix} FFmpeg is not installed, please install here: https://ffmpeg.org/\033[0m"
                 )
             except Exception as e:
                 s = "".join(random.choices(string.ascii_letters + string.digits, k=10))
                 name = f"{s}.log"
                 f = open(f"{s}.log", "a")
                 f.write(
-                    f"[Spyracy] When downloading {song}, this ERROR occured:\n{e}\nThis is likely due to invalid file type formats that your converter or os does not support."
+                    f"{sprefix} When downloading {song}, this ERROR occured:\n{e}\nThis is likely due to invalid file type formats that your converter or os does not support."
                 )
-                print(f"[Spyracy] Error occured, saved to {name}")
+                print(f"{sprefix} Error occured, saved to {name}\033[0m")
                 break
-        print("[Spyracy] Song(s) downloaded successfully, head over to settings to load them.")
+        print(f"{sprefix} Song(s) downloaded successfully, head over to settings to load them.\033[0m")
 
     def downloada(self):
         global toDownload
@@ -696,7 +812,5 @@ class CustomTkinter(customtkinter.CTk):
             toDownload.clear()
             toDownload.append(text)
             self.downloadFLACs()
-
-
 
 CustomTkinter().mainloop()
