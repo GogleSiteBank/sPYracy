@@ -7,6 +7,7 @@ dependencies = [
     "customtkinter",
     "PIL",
     "pygame",
+    "audioread",
     ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
     "json",
     "typing",
@@ -26,6 +27,7 @@ dpstdout = {
     "customtkinter": "Customtkinter",
     "PIL": "PIL/Pillow",
     "pygame": "PyGame",
+    "audioread": "Audio Read",
     ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
     "json": "Json",
     "typing": "Typing",
@@ -38,19 +40,20 @@ dpstdout = {
     "webbrowser": "Web Browser",
     "argparse": "Arg Parse"
 }
-
+needs_refenv = False
 def load_dependencies():
     print(f"{sprefix} Loading dependencies...\033[0m")
     for _ in dependencies:
-        if _ != "pygame":
+        if _ != "pygame" and _ != "PIL" """Pillow requires import as "PIL", whilst installing requires "pillow", this is the only way i could fix it""":
             try:
                 exec(f"import {_}")
                 print(f"{sprefix} {dpstdout[_]} found.\033[0m")
             except ModuleNotFoundError:
                 print(f"{sprefix} {dpstdout[_]} not found, installing...\033[0m")
                 os.system(f"pip install {_}")
+                needs_refenv = True
         else:
-            if _ == "PyGame":
+            if _ == "pygame":
                 try:
                     f = open(os.devnull, 'w')
                     sys.stdout = f
@@ -58,8 +61,18 @@ def load_dependencies():
                     sys.stdout = sys.__stdout__
                     print(f"{sprefix} PyGame found.\033[0m")
                 except ModuleNotFoundError:
+                    sys.stdout = sys.__stdout__
                     print(f"{sprefix} PyGame not found, installing...\033[0m")
                     os.system("pip install pygame")
+                    needs_refenv = True
+            else:
+                try:
+                    exec(f"import {_}")
+                    print(f"{sprefix} {dpstdout[_]} found.\033[0m")
+                except ModuleNotFoundError:
+                    print(f"{sprefix} {dpstdout[_]} not found, installing...\033[0m")
+                    os.system(f"pip install pillow")
+                    needs_refenv = True
     print(f"{sprefix} Dependencies loaded!\033[0m")
 load_dependencies()
 from youtube_search import YoutubeSearch as search
@@ -83,6 +96,7 @@ import requests
 from tkinter import messagebox
 import webbrowser
 import argparse
+import audioread
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b) ## % 1 = r, % 2 = g, % 3 = b. 02x = hex per
 
@@ -153,7 +167,7 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.4.1"
+version = "2.5.0"
 
 if not zz.bypass_updates in post:
     try:
@@ -193,8 +207,10 @@ def updateconfig():
     }
 
 
+
 updateconfig()
 files = []
+forplaylist = []
 playing = ""
 pygame.mixer.init()
 lastplayed = ""
@@ -203,6 +219,7 @@ directory = os.getcwd()
 for file in os.listdir(directory):
     if file.endswith(tuple(filetypes)):
         files.append(file)
+        forplaylist.append(file)
 x = 0
 
 if files == []:
@@ -211,6 +228,8 @@ def shuffle():
     random.shuffle(files)
     play()
 
+def setpos(position):
+    pygame.mixer.music.set_pos(position)
 
 def play():
     global playing, lastplayed, x, forlength
@@ -221,7 +240,8 @@ def play():
                 forlength = files[x]
                 pygame.mixer.music.unload()
                 pygame.mixer.music.load(files[x])
-                pygame.mixer.music.play()
+                if not zz.paused:
+                    pygame.mixer.music.play()
                 x += 1
                 break
         except IndexError:
@@ -243,6 +263,7 @@ def play():
             play()
         except Exception as e:
             print(f"{sprefix} unexpected error! \n{e}\033[0m")
+    pygame.mixer.music.set_pos(6.34)
 
 play()
 
@@ -258,15 +279,59 @@ def previous():
         pygame.mixer.music.play()
         break
 
+playlistfiles = []
 
+def create_playlist(songs : list, playlistname):
+    playlist = []
+    for song in songs:
+        playlist.append(song)
+    print(f"{sprefix} Creating Playlist \"{playlistname}.playlist\" : {playlist}...\033[0m")
+    try:
+        f = open(playlistname + ".playlist", "r")
+        f.close()
+        userInput = input(f"{sprefix} Playlist \"{playlistname}.playlist\" exists; would you like to overwrite it (1) , add to it (2) or exit? (3) [1/2/3] : \033[0m")
+        valid_options = ["1","2","3"]
+        if userInput not in valid_options:
+            print(f"{sprefix} User failed to make choice. Aborting...\033[0m")
+        else:
+            if userInput == valid_options[0]:
+                f = open(playlistname + ".playlist", "w")
+                for _ in songs:
+                    f.write(_ + "\n")
+                f.close()
+                print(f"{sprefix} Playlist successfully generated.\033[0m")
+            elif userInput == valid_options[1]:
+                f = open(playlistname + ".playlist", "a")
+                for _ in songs:
+                    f.write(_ + "\n")
+                f.close()
+                print(f"{sprefix} Playlist successfully generated.\033[0m")
+            else:
+                print(f"{sprefix} Aborting...")
+                exit()
+    except:
+        f = open(playlistname + ".playlist", "a")
+        for _ in songs:
+            f.write(_ + "\n")
+        f.close()
+        print(f"{sprefix} Playlist successfully generated.\033[0m")
 
-
+def read_playlist(playlist : file):
+    global files
+    pygame.mixer.music.unload()
+    files.clear()
+    f = open(playlist, "r")
+    for count, line in enumerate(f.readlines()):
+        line = line.replace("\n", "")
+        files.append(line)
+        print(f"{sprefix} Song number {count} ({line}) has been queued.\033[0m")
+        
 def skip():
     play()
 
 class CustomTkinter(customtkinter.CTk):
     def __init__(self):
-        super().__init__()
+        super(CustomTkinter, self).__init__()
         self.geometry("700x450")
         self.resizable(False, False)
         self.title(f"sPYracy v{version}")
@@ -320,12 +385,15 @@ class CustomTkinter(customtkinter.CTk):
         self.loopicon = customtkinter.CTkImage(
             light_image=Image.open(os.path.join(image_path, "loop-64.png")),
         )
+        self.playlisticon = customtkinter.CTkImage(
+            light_image=Image.open(os.path.join(image_path, "playlist.png")),
+        )
         self.Streaming = customtkinter.CTkButton(
             self.navigation_frame,
             image=self.streamingicon,
             corner_radius=0,
             height=40,
-            border_spacing=10,
+            border_spacing=10,  
             text="Streaming",
             fg_color="transparent",
             text_color=("gray10", "gray90"),
@@ -340,31 +408,45 @@ class CustomTkinter(customtkinter.CTk):
             corner_radius=0,
             height=40,
             border_spacing=10,
-            text="Download FLACs",
+            text="Download Songs",
             fg_color="transparent",
-            text_color=("gray10", "gray90"),
             hover_color=("gray70", "gray30"),
+            text_color=("gray10", "gray90"),
             anchor="w",
             command=self.downloading,
         )
         self.Downloading.grid(row=2, column=0, sticky="ew")
-        self.Settings = customtkinter.CTkButton(
+        self.Playlists = customtkinter.CTkButton(
             self.navigation_frame,
-            image=self.settingicon,
+            image=self.playlisticon,
             corner_radius=0,
             height=40,
             border_spacing=10,
-            text="Settings",
+            text="Playlists",
             fg_color="transparent",
             text_color=("gray10", "gray90"),
             hover_color=("gray70", "gray30"),
             anchor="w",
-            command=self.misc,
+            command=self.playlists,
         )
-        self.Settings.grid(row=3, column=0, sticky="ew")
-        self.frame1 = customtkinter.CTkFrame(
-            self, corner_radius=0, fg_color="transparent", width=100, height=100
-        )
+        self.Playlists.grid(row=3, column=0, sticky="ew")
+        self.Settings = customtkinter.CTkButton(
+            self.navigation_frame,
+            image=self.settingicon,
+            corner_radius=0, 
+            height=40, 
+            border_spacing=10, 
+            text="Settings", 
+            fg_color="transparent", 
+            text_color=("gray10", "gray90"), 
+            hover_color=("gray70", "gray30"), 
+            anchor="w", 
+            command=self.misc, 
+        ) 
+        self.Settings.grid(row=5, column=0, sticky="ew") 
+        self.frame1 = customtkinter.CTkFrame( 
+            self, corner_radius=0, fg_color="transparent", width=100, height=100 
+        ) 
         self.frame1.grid(row=0, column=1, sticky="nsew")
         self.frame2 = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent", width=100, height=100
@@ -372,6 +454,10 @@ class CustomTkinter(customtkinter.CTk):
         self.frame3 = customtkinter.CTkFrame(
             self, corner_radius=0, fg_color="transparent", width=100, height=100
         )
+        self.frame4 = customtkinter.CTkFrame(
+            self, corner_radius=0, fg_color="transparent", width=100, height=100
+        )
+        
         self.streaming()
         
         self.Loop = customtkinter.CTkButton(
@@ -455,7 +541,7 @@ class CustomTkinter(customtkinter.CTk):
         self.thread()
         self.scrollingText()
         self.frame = customtkinter.CTkFrame(master=self.frame1, height=55, width=500)
-        self.frame.pack(pady=80)
+        self.frame.pack(pady=95)
         self.Playing = customtkinter.CTkLabel(
             self.frame, font=("Arial", 15, "bold"), width=300
         )
@@ -465,7 +551,7 @@ class CustomTkinter(customtkinter.CTk):
             self.frame1,
             placeholder_text="Input song/audio query",
             width=400
-        ); self.Search.place(relx=0.045, rely=0.355)
+        ); self.Search.place(relx=0.045, rely=0.37)
         self.Confirm = customtkinter.CTkButton(
             self.frame1,
             fg_color=rgb(50,50,50),
@@ -473,7 +559,7 @@ class CustomTkinter(customtkinter.CTk):
             text="Search",
             width=90,
             command=self.search
-        ); self.Confirm.place(relx=0.79, rely=0.355)
+        ); self.Confirm.place(relx=0.79, rely=0.37)
         self.spyracyl1 = customtkinter.CTkLabel(
             text="", master=self.frame1, image=self.sPYracy, corner_radius=10
         )
@@ -483,9 +569,15 @@ class CustomTkinter(customtkinter.CTk):
         self.spyracyl3 = customtkinter.CTkLabel(
             text="", master=self.frame3, image=self.sPYracy, corner_radius=10
         )
+        self.spyracyl4 = customtkinter.CTkLabel(
+            text="", master=self.frame4, image=self.sPYracy, corner_radius=10
+        )
+        
         self.spyracyl1.place(x=5, y=210)
         self.spyracyl2.place(x=5, y=210)
         self.spyracyl3.place(x=5, y=210)
+        self.spyracyl4.place(x=5, y=210)
+        
         self.flacdownloader = customtkinter.CTkEntry(
             self.frame2,
             placeholder_text=f"Enter name of the {filetype}(s) to download (seperate with ':').",
@@ -568,8 +660,54 @@ class CustomTkinter(customtkinter.CTk):
             command=self.downloada,
         )
         self.download.place(x=25, y=90)
+        self.values = customtkinter.CTkComboBox(
+            self.frame4,
+            width=500,
+            values=forplaylist,
+            command=self.playlist
+        ); self.values.pack(pady=25)
+        self.playlistname = customtkinter.CTkEntry(
+            self.frame4,
+            placeholder_text="Playlist name",
+            width=500
+        ); self.playlistname.pack(pady=5)
+        self.submit = customtkinter.CTkButton(
+            self.frame4,
+            width=500,
+            hover_color=rgb(50, 50, 50),
+            fg_color=rgb(31, 31, 31),
+            text="Save playlist",
+            command=self.submitplaylist
+        ); self.submit.pack(pady=5)
+        self.openplaylist = customtkinter.CTkButton(
+            self.frame4,
+            width=500,
+            hover_color=rgb(50, 50, 50),
+            fg_color=rgb(31, 31, 31),
+            text="Open Playlist",
+            command=self.Openplaylist
+        ); self.openplaylist.pack(pady=5)
+        self.Timeslider = customtkinter.CTkSlider(
+            self.frame1,
+            from_=0,
+            fg_color=rgb(150,150,150),
+            button_color=rgb(31,31,31),
+            button_hover_color=("gray70", "gray30"),
+            width=250,
+            to=self.get_duration(forlength),
+            command=self.setpos
+        ); self.Timeslider.place(x=145, y=60)
         self.update()
         self.isclipause()
+        self.update_slider()
+    def get_duration(self, song):
+        with audioread.audio_open(song) as au:
+            return au.duration
+    def setpos(self, position):
+        try:
+            pygame.mixer.music.set_pos(position)
+        except pygame.error:
+            pass ##// Stops pygame from saying "music isnt playing" (its not the best extension!)
     def togglestartup(self):
         appdata = os.getenv("Appdata")
         dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
@@ -590,6 +728,20 @@ class CustomTkinter(customtkinter.CTk):
                 with open(f"{dir}/sPYracy_StartupProgram.py", "w") as f:
                     f.write(f"import os\nos.chdir(\"{fixedcwd}\")\nos.system(\'python \"{fixedfile}\"')")
                 print(f"{sprefix} Startup file created/enabled.\033[0m")
+    def Openplaylist(self):
+        files.clear()
+        file = filedialog.askopenfilename()
+        read_playlist(file)
+        self.playSong()
+    def submitplaylist(self):
+        global playlistfiles
+        name = self.playlistname.get()
+        create_playlist(playlistfiles, name)
+        playlistfiles.clear
+    def playlist(self, song):
+        global playlistfiles
+        playlistfiles.append(song)
+        self.values.configure(values=forplaylist)
     def create_startup(self):
         appdata = os.getenv("Appdata")
         dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
@@ -625,16 +777,16 @@ class CustomTkinter(customtkinter.CTk):
         print(f"{sprefix} Entering \"{i}\" would download the song/audio : \"{final}\"\033[0m")
         
     def forcesong(self, song):
-        pygame.mixer.music.stop()
-        pygame.mixer.music.unload()
+        global files
         files.clear()
         files.append(song)
+        play()
+        files.clear()
         for file in os.listdir():
             if file.endswith(tuple(filetypes)):
-                if file != song:
-                    files.append(file)
-        if paused == False: play()
+                files.append(file)
         self.force.configure(values=files)
+        self.force.set("Force Song")
     def load(self):
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
@@ -679,6 +831,10 @@ class CustomTkinter(customtkinter.CTk):
         threading.Timer(1.0, self.thread).start()
         self.getBusy()
 
+    def update_slider(self):
+        self.Timeslider.configure(to=self.get_duration(forlength))
+        threading.Timer(0.05, self.update_slider).start()
+
     def playSong(self):
         global paused
         if paused == True:
@@ -689,6 +845,7 @@ class CustomTkinter(customtkinter.CTk):
             paused = True
             self.Play.configure(image=self.play)
             pygame.mixer.music.pause()
+        self.force.configure(values=files)
 
     def isclipause(self):
         global loop, files
@@ -708,23 +865,33 @@ class CustomTkinter(customtkinter.CTk):
                 previous()
         except:
             previous()
+        self.force.configure(values=files)
 
     def skipSong(self):
         skip()
+        self.force.configure(values=files)
 
     def showFrame(self, name):
         if name == "1":
             self.frame2.grid_forget()
             self.frame3.grid_forget()
+            self.frame4.grid_forget()
             self.frame1.grid(row=0, column=1, sticky="nsew")
         elif name == "2":
             self.frame1.grid_forget()
             self.frame3.grid_forget()
+            self.frame4.grid_forget()
             self.frame2.grid(row=0, column=1, sticky="nsew")
         elif name == "3":
             self.frame2.grid_forget()
             self.frame1.grid_forget()
+            self.frame4.grid_forget()
             self.frame3.grid(row=0, column=1, sticky="nsew")
+        elif name == "4":
+            self.frame2.grid_forget()
+            self.frame3.grid_forget()
+            self.frame1.grid_forget()
+            self.frame4.grid(row=0, column=1, sticky="nsew")
 
     def scrollingText(self):
         global playing
@@ -739,12 +906,14 @@ class CustomTkinter(customtkinter.CTk):
         self.showFrame("1")
         self.Downloading.configure(fg_color="transparent")
         self.Streaming.configure(fg_color=rgb(31, 31, 31))
+        self.Playlists.configure(fg_color="transparent")
         self.Settings.configure(fg_color="transparent")
 
     def downloading(self):
         self.showFrame("2")
         self.Streaming.configure(fg_color="transparent")
         self.Downloading.configure(fg_color=rgb(31, 31, 31))
+        self.Playlists.configure(fg_color="transparent")
         self.Settings.configure(fg_color="transparent")
         self.frame2.grid(row=0, column=1, sticky="nsew")
 
@@ -752,7 +921,15 @@ class CustomTkinter(customtkinter.CTk):
         self.showFrame("3")
         self.Streaming.configure(fg_color="transparent")
         self.Settings.configure(fg_color=rgb(31, 31, 31))
+        self.Playlists.configure(fg_color="transparent")
         self.Downloading.configure(fg_color="transparent")
+
+    def playlists(self):
+        self.showFrame("4")
+        self.Streaming.configure(fg_color="transparent")
+        self.Settings.configure(fg_color="transparent")
+        self.Downloading.configure(fg_color="transparent")
+        self.Playlists.configure(fg_color=rgb(31,31,31))
 
     def getBusy(self):
         if paused == False:
