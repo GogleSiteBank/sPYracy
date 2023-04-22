@@ -8,6 +8,7 @@ dependencies = [
     "PIL",
     "pygame",
     "audioread",
+    "pypresence",
     ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
     "json",
     "typing",
@@ -28,6 +29,7 @@ dpstdout = {
     "PIL": "PIL/Pillow",
     "pygame": "PyGame",
     "audioread": "Audio Read",
+    "pypresence" : "PY Presence",
     ### depenencies past here are for "weird" installs of python that dont include the standard plugins (os & sys cannot be checked due to first line)
     "json": "Json",
     "typing": "Typing",
@@ -44,7 +46,7 @@ needs_refenv = False
 def load_dependencies():
     print(f"{sprefix} Loading dependencies...\033[0m")
     for _ in dependencies:
-        if _ != "pygame" and _ != "PIL" """Pillow requires import as "PIL", whilst installing requires "pillow", this is the only way i could fix it""":
+        if _ != "pygame" and _ != "PIL":
             try:
                 exec(f"import {_}")
                 print(f"{sprefix} {dpstdout[_]} found.\033[0m")
@@ -97,6 +99,12 @@ from tkinter import messagebox
 import webbrowser
 import argparse
 import audioread
+import pypresence
+id = "1099055373937283082"
+from pypresence import Presence
+id = "1099055373937283082"
+RPC = Presence(id)
+RPC.connect()
 def rgb(r, g, b):
     return "#%02x%02x%02x" % (r, g, b) ## % 1 = r, % 2 = g, % 3 = b. 02x = hex per
 
@@ -221,7 +229,7 @@ for file in os.listdir(directory):
         files.append(file)
         forplaylist.append(file)
 x = 0
-
+playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
 if files == []:
     print(f"{sprefix} There are no music files in your current directory, open a directory with music files by clicking the files icon.\033[0m")
 def shuffle():
@@ -233,52 +241,60 @@ def setpos(position):
 
 def play():
     global playing, lastplayed, x, forlength
-    if loop != True:
-        try:
-            for file in files:
-                playing = files[x] + "       "
-                forlength = files[x]
-                pygame.mixer.music.unload()
-                pygame.mixer.music.load(files[x])
-                if not zz.paused:
+    
+    try:
+        if loop != True:
+            try:
+                for file in files:
+                    playing = files[x] + "       "
+                    forlength = files[x]
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load(files[x])
+                    if not zz.paused:
+                        pygame.mixer.music.play()
+                    x += 1
+                    break
+            except IndexError:
+                print(f"{sprefix} Songs have ended.\033[0m")
+            except Exception as e:
+                print(f"{sprefix} unexpected error! \n{e}\033[0m")
+        else:
+            try:
+                for file in files:
+                    playing = files[x] + "       "
+                    forlength = files[x]
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load(files[x])
                     pygame.mixer.music.play()
-                x += 1
-                break
-        except IndexError:
-            print(f"{sprefix} Songs have ended.\033[0m")
-        except Exception as e:
-            print(f"{sprefix} unexpected error! \n{e}\033[0m")
-    else:
-        try:
-            for file in files:
-                playing = files[x] + "       "
-                forlength = files[x]
-                pygame.mixer.music.unload()
-                pygame.mixer.music.load(files[x])
-                pygame.mixer.music.play()
-                x += 1
-                break
-        except IndexError:
-            x = 0
-            play()
-        except Exception as e:
-            print(f"{sprefix} unexpected error! \n{e}\033[0m")
-    pygame.mixer.music.set_pos(6.34)
+                    x += 1
+                    break
+            except IndexError:
+                x = 0
+                play()
+            except Exception as e:
+                print(f"{sprefix} unexpected error! \n{e}\033[0m")
+    except pygame.error: 
+        print(f"{sprefix} Your media file is corrupt.\033[0m")
 
 play()
 
 def previous():
-    global playing, lastplayed, x, forlength
-    for file in files:
-        x -= 1
-        playing = files[x]
-        forlength = files[x]
-        pygame.mixer.music.unload()
-        time.sleep(0.1)
-        pygame.mixer.music.load(files[x])
-        pygame.mixer.music.play()
-        break
-
+    global forlength
+    try:
+        global playing, lastplayed, x, forlength
+        for file in files:
+            x -= 1
+            playing = files[x]
+            forlength = files[x]
+            pygame.mixer.music.unload()
+            time.sleep(0.1)
+            pygame.mixer.music.load(files[x])
+            pygame.mixer.music.play()
+            break
+        playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+        print(playingmessage)
+    except pygame.error: 
+        print(f"{sprefix} Your media file is corrupt.\033[0m")
 playlistfiles = []
 
 def create_playlist(songs : list, playlistname):
@@ -327,12 +343,16 @@ def read_playlist(playlist : file):
         print(f"{sprefix} Song number {count} ({line}) has been queued.\033[0m")
         
 def skip():
+    global forlength
     play()
+    playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+    print(playingmessage)
 
 class CustomTkinter(customtkinter.CTk):
     def __init__(self):
         super(CustomTkinter, self).__init__()
         self.geometry("700x450")
+        self.protocol("WM_DELETE_WINDOW", self.xpressed)
         self.resizable(False, False)
         self.title(f"sPYracy v{version}")
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)))
@@ -591,7 +611,7 @@ class CustomTkinter(customtkinter.CTk):
             width=500,
             height=30,
             fg_color=rgb(50, 50, 50),
-            button_color=rgb(31, 31, 31),
+            button_color=rgb(30, 30, 30),
             command=self.fileType,
         )
         self.filetype.place(x=25, y=30)
@@ -599,51 +619,51 @@ class CustomTkinter(customtkinter.CTk):
         self.Ver = customtkinter.CTkLabel(
             self.frame3,
             text=f"Version: {version}",
-            font=customtkinter.CTkFont("Gotham", 24, "bold")
+            font=customtkinter.CTkFont("Arial", 24, "bold")
         )
         self.Ver.place(relx=0.5, rely=0.4, anchor=customtkinter.CENTER)
         self.workingdir = customtkinter.CTkLabel(
             self.frame3,
             text=f"Working Directory: {os.getcwd()}",
-            font=customtkinter.CTkFont("Gotham", 15, "bold")
+            font=customtkinter.CTkFont("Arial", 15, "bold")
         )
         self.Upd = customtkinter.CTkButton(
             self.frame3,
             text="Reload songs. (Unloads current song.)",
-            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            font=customtkinter.CTkFont("Arial", 15, "bold"),
             fg_color=rgb(50,50,50),
-            hover_color=rgb(31,31,31),
+            hover_color=rgb(30, 30, 30),
             command=self.load
         ); self.Upd.place(relx=0.075, rely=0.18)
         self.force = customtkinter.CTkOptionMenu(
             self.frame3,
             values=files,
             fg_color=rgb(50,50,50),
-            button_color=rgb(31,31,31),
+            button_color=rgb(30, 30, 30),
             command=self.forcesong
         ); self.force.set("Force Song"); self.force.place(relx=0.65, rely=0.18)
         self.LoadSongs = customtkinter.CTkButton(
             self.frame3,
             fg_color=rgb(50,50,50),
-            hover_color=rgb(31,31,31),
+            hover_color=rgb(30, 30, 30),
             text="Download Songs via File",
-            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            font=customtkinter.CTkFont("Arial", 15, "bold"),
             command=self.readfile
         ); self.LoadSongs.place(relx=0.18, rely=0.3, anchor=customtkinter.CENTER)
         self.StartUp = customtkinter.CTkButton(
             self.frame3,
             fg_color=rgb(50,50,50),
-            hover_color=rgb(31,31,31),
+            hover_color=rgb(30, 30, 30),
             text="Toggle load on startup",
-            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            font=customtkinter.CTkFont("Arial", 15, "bold"),
             command=self.togglestartup
         ); self.StartUp.place(relx=0.525, rely=0.3, anchor=customtkinter.CENTER)
         self.RecreateStartup = customtkinter.CTkButton(
             self.frame3,
             fg_color=rgb(50,50,50),
-            hover_color=rgb(31,31,31),
+            hover_color=rgb(30, 30, 30),
             text="Recreate Startup file",
-            font=customtkinter.CTkFont("Gotham", 15, "bold"),
+            font=customtkinter.CTkFont("Arial", 15, "bold"),
             command=self.create_startup
         ); self.RecreateStartup.place(relx=0.85, rely=0.3, anchor=customtkinter.CENTER)
         self.workingdir.pack()
@@ -655,7 +675,7 @@ class CustomTkinter(customtkinter.CTk):
             border_spacing=1,
             width=500,
             hover_color=rgb(50, 50, 50),
-            fg_color=rgb(31, 31, 31),
+            fg_color=rgb(30, 30, 30),
             text="Download",
             command=self.downloada,
         )
@@ -675,7 +695,7 @@ class CustomTkinter(customtkinter.CTk):
             self.frame4,
             width=500,
             hover_color=rgb(50, 50, 50),
-            fg_color=rgb(31, 31, 31),
+            fg_color=rgb(30, 30, 30),
             text="Save playlist",
             command=self.submitplaylist
         ); self.submit.pack(pady=5)
@@ -683,7 +703,7 @@ class CustomTkinter(customtkinter.CTk):
             self.frame4,
             width=500,
             hover_color=rgb(50, 50, 50),
-            fg_color=rgb(31, 31, 31),
+            fg_color=rgb(30, 30, 30),
             text="Open Playlist",
             command=self.Openplaylist
         ); self.openplaylist.pack(pady=5)
@@ -691,15 +711,18 @@ class CustomTkinter(customtkinter.CTk):
             self.frame1,
             from_=0,
             fg_color=rgb(150,150,150),
-            button_color=rgb(31,31,31),
+            button_color=rgb(30, 30, 30),
             button_hover_color=("gray70", "gray30"),
-            width=250,
+            width=252,
             to=self.get_duration(forlength),
             command=self.setpos
-        ); self.Timeslider.place(x=145, y=60)
+        ); self.Timeslider.place(x=147, y=60)
         self.update()
         self.isclipause()
         self.update_slider()
+        self.updatePresence()
+    def xpressed(self):
+        os._exit(1)
     def get_duration(self, song):
         with audioread.audio_open(song) as au:
             return au.duration
@@ -717,17 +740,26 @@ class CustomTkinter(customtkinter.CTk):
             i += 1
         for file in os.listdir(dir):
             ii += 1
-            if file == "sPYracy_StartupProgram.py":
+            if file == "sPYracy_StartupProgram.cmd":
                 os.remove(f"{dir}/{file}")
                 print(f"{sprefix} Startup file disabled.\033[0m")
                 break
             if ii == i:
-                ### os.system(f"copy {__file__} \"{dir}/sPYracy_StartupProgram.py\"") -- old method, this works but we need to change the working directory to here to allow images & songs to load.
+                ### os.system(f"copy {__file__} \"{dir}/sPYracy_StartupProgram.cmd\"") -- old method, this works but we need to change the working directory to here to allow images & songs to load.
                 fixedcwd = os.getcwd().replace("\\", "/")
                 fixedfile = __file__.replace("\\", "/")
-                with open(f"{dir}/sPYracy_StartupProgram.py", "w") as f:
-                    f.write(f"import os\nos.chdir(\"{fixedcwd}\")\nos.system(\'python \"{fixedfile}\"')")
+                with open(f"{dir}/sPYracy_StartupProgram.cmd", "w") as f:
+                    f.write(f"@echo off\nCD /D {fixedcwd}\npython -u {fixedfile}")
                 print(f"{sprefix} Startup file created/enabled.\033[0m")
+    def updatePresence(self):
+        global RPC
+        bigimage = "https://avatars.githubusercontent.com/u/125816677?v=4"
+        smallimage = "https://raw.githubusercontent.com/GogleSiteBank/sPYracy/main/online-64.png"
+        buttoncontent = [{"label": "Download sPYracy", "url": "https://github.com/GogleSiteBank/sPYracy/releases/latest/download/sPYracy.zip"}]
+        state = "Listening on sPYracy:"
+        song = forlength
+        RPC.update(large_image=bigimage,small_image=smallimage, buttons=buttoncontent, state=song, details=state)
+        threading.Timer(15, self.updatePresence).start()
     def Openplaylist(self):
         files.clear()
         file = filedialog.askopenfilename()
@@ -747,8 +779,8 @@ class CustomTkinter(customtkinter.CTk):
         dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
         fixedcwd = os.getcwd().replace("\\", "/")
         fixedfile = __file__.replace("\\", "/")
-        with open(f"{dir}/sPYracy_StartupProgram.py", "w") as f:
-            f.write(f"import os\nos.chdir(\"{fixedcwd}\")\nos.system('python \"{fixedfile}\"\')")
+        with open(f"{dir}/sPYracy_StartupProgram.cmd", "w") as f:
+            f.write(f"@echo off\nCD /D {fixedcwd}\npython -u {fixedfile}")
         print(f"{sprefix} Startup file recreated.\033[0m")
     def readfile(self):
         global toDownload
@@ -777,7 +809,7 @@ class CustomTkinter(customtkinter.CTk):
         print(f"{sprefix} Entering \"{i}\" would download the song/audio : \"{final}\"\033[0m")
         
     def forcesong(self, song):
-        global files
+        global files, forlength
         files.clear()
         files.append(song)
         play()
@@ -787,6 +819,8 @@ class CustomTkinter(customtkinter.CTk):
                 files.append(file)
         self.force.configure(values=files)
         self.force.set("Force Song")
+        playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+        print(playingmessage)
     def load(self):
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
@@ -905,14 +939,14 @@ class CustomTkinter(customtkinter.CTk):
     def streaming(self):
         self.showFrame("1")
         self.Downloading.configure(fg_color="transparent")
-        self.Streaming.configure(fg_color=rgb(31, 31, 31))
+        self.Streaming.configure(fg_color=rgb(30, 30, 30))
         self.Playlists.configure(fg_color="transparent")
         self.Settings.configure(fg_color="transparent")
 
     def downloading(self):
         self.showFrame("2")
         self.Streaming.configure(fg_color="transparent")
-        self.Downloading.configure(fg_color=rgb(31, 31, 31))
+        self.Downloading.configure(fg_color=rgb(30, 30, 30))
         self.Playlists.configure(fg_color="transparent")
         self.Settings.configure(fg_color="transparent")
         self.frame2.grid(row=0, column=1, sticky="nsew")
@@ -920,7 +954,7 @@ class CustomTkinter(customtkinter.CTk):
     def misc(self):
         self.showFrame("3")
         self.Streaming.configure(fg_color="transparent")
-        self.Settings.configure(fg_color=rgb(31, 31, 31))
+        self.Settings.configure(fg_color=rgb(30, 30, 30))
         self.Playlists.configure(fg_color="transparent")
         self.Downloading.configure(fg_color="transparent")
 
@@ -929,16 +963,18 @@ class CustomTkinter(customtkinter.CTk):
         self.Streaming.configure(fg_color="transparent")
         self.Settings.configure(fg_color="transparent")
         self.Downloading.configure(fg_color="transparent")
-        self.Playlists.configure(fg_color=rgb(31,31,31))
+        self.Playlists.configure(fg_color=rgb(30, 30, 30))
 
     def getBusy(self):
+        global forlength
         if paused == False:
             if pygame.mixer.music.get_busy():
                 pass
             else:
                 if len(forlength) > 0:
                     play()
-                    print(f"{sprefix} Song \"{forlength}\" is now playing. \033[0m")
+                    playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+                    print(playingmessage)
 
     def fileType(self, s: str):
         global filetype
