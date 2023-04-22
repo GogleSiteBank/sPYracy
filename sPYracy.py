@@ -175,7 +175,7 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.5.0"
+version = "2.5.1"
 
 if not zz.bypass_updates in post:
     try:
