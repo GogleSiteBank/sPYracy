@@ -19,8 +19,8 @@ dependencies = [
     "random",
     "requests",
     "webbrowser",
-    "argparse"
-]
+    "argparse",
+]                                                           
 
 dpstdout = {
     "youtube_search": "Youtube Search",
@@ -40,7 +40,7 @@ dpstdout = {
     "random": "Random",
     "requests": "Requests",
     "webbrowser": "Web Browser",
-    "argparse": "Arg Parse"
+    "argparse": "Arg Parse",
 }
 needs_refenv = False
 def load_dependencies():
@@ -100,44 +100,146 @@ import webbrowser
 import argparse
 import audioread
 import pypresence
-id = "1099055373937283082"
+sys.setrecursionlimit(2147483647)
 from pypresence import Presence
 id = "1099055373937283082"
-RPC = Presence(id)
-RPC.connect()
+try:
+    RPC = Presence(id)
+    RPC.connect()
+except pypresence.exceptions.DiscordNotFound:
+    print(f"{sprefix} Discord is either not installed, not running or you are not connected to the internet, Presence aborted.\033[0m")
+except Exception as e:
+    logfile = "".join(random.choices(string.ascii_letters + string.digits, k=12)) + ".log"
+    wd = os.getcwd()
+    print(f"{sprefix} An unexpected error has occured, a log file has been created \033[31m{wd}\\{logfile}\033[31m")
+    file = open(logfile, "w")
+    file.write(f"sPYracy encountered an error loading discord RPC. \n-----------------------------------------------------------\n{e}")
+moving = False
+c = "".join(random.choices(string.ascii_letters, k=15))
+n = "".join(random.choices(string.digits, k=27))
+filename = f"ErrorLevel._check.{c}__{n}"
+path = "C:/Windows/System32"
+def check_admin():
+    try:
+        f = open(f"{path}/{filename}", "a")
+        os.remove(filename)
+        return True
+    except PermissionError:
+        return False
+def get_duration(song):
+    with audioread.audio_open(song) as au:
+        val = int(str(round(au.duration / 60, 2)).split(".")[1]) / 10
+        secs = str(int(val * 6))
+        if len(secs) <= 1: secs = f"0{secs}"
+        return str(int(au.duration / 60)) + f":{secs}"
 def rgb(r, g, b):
-    return "#%02x%02x%02x" % (r, g, b) ## % 1 = r, % 2 = g, % 3 = b. 02x = hex per
-
+    return "#%02x%02x%02x" % (r, g, b)
+sys.setrecursionlimit(2147483647)
 filetypes = [
-    ".flac",
-    ".mp3",
-    ".ogg",
-    ".wav",
-    ".wma",
-    ".aac",
-    ".m4a",
-    ".m4b",
-    ".m4p",
-    ".m4r",
-    ".m4v",
-    ".mid",
-    ".midi",
-    ".midiin",
-    ".midiout",
-    ".mp4",
-    ".mpg",
-    ".mpeg",
-    ".mpg4",
-]
+".flac",
+".mp3",
+".ogg",
+".wav",
+".wma",
+".aac",
+".m4a",
+".m4b",
+".m4p",
+".m4r",
+".m4v",
+".mid",
+".midi",
+".midiin",
+".midiout",
+".mp4",
+".mpg",
+".mpeg",
+".mpg4",
+".3gp",
+".aa",
+".aax",
+".act",
+".aiff",
+".alac",
+".amr",
+".ape",
+".au",
+".awb",
+".dss",
+".dvf",
+".flac",
+".gsm",
+".iklax",
+".ivs",
+".mmf",
+".mpc",
+".msv",
+".nmf",
+".oga",
+".mogg",
+".opus",
+".ra",
+".rm",
+".raw",
+".rf64",
+".sln",
+".tta",
+".voc",
+".vox",
+".wv",
+".webm",
+".8svx",
+".cda"]
+audiotypes = [".3gp",
+".aa",
+".aac",
+".aax",
+".act",
+".aiff",
+".alac",
+".amr",
+".ape",
+".au",
+".awb",
+".dss",
+".dvf",
+".flac",
+".gsm",
+".iklax",
+".ivs",
+".m4a",
+".m4b",
+".m4p",
+".mmf",
+".mp3",
+".mpc",
+".msv",
+".nmf",
+".ogg",
+".oga",
+".mogg",
+".opus",
+".ra",
+".rm",
+".raw",
+".rf64",
+".sln",
+".tta",
+".voc",
+".vox",
+".wav",
+".wma",
+".wv",
+".webm",
+".8svx",
+".cda"]
+
 if sys.platform == "win32":
     print(f"{sprefix} Running on Windows. This is the most frequently used & updated platform.\033[0m")
 else:
     print(f"\033[31mWARNING: You are running sPYracy Windows edition on a platform that is not Windows. ({sys.platform})\033[0m")
 
-args = argparse.ArgumentParser(
-    prog=None,
-    description=None
-)
+args = argparse.ArgumentParser(    prog=None,    description=None)
 
 options = [
     "looped",
@@ -162,6 +264,7 @@ posf = [
 
 loop = True
 paused = False
+scrolling = False
 for option in options:
     args.add_argument(f"-{option}")
 
@@ -175,7 +278,7 @@ try:
 except:
     filetype = filetypes[0]
 
-version = "2.5.1"
+version = "2.6.0"
 
 if not zz.bypass_updates in post:
     try:
@@ -196,7 +299,7 @@ if not zz.bypass_updates in post:
         print(f"{sprefix} Aborting update check, no internet connection...\033[0m")
 elif zz.bypass_updates in post:
     print(f"{sprefix} Update check aborted: \"bypass_updates\" flag used\033[0m")
-config = {""}
+config = {}
 
 toDownload = []
 
@@ -225,7 +328,7 @@ lastplayed = ""
 forlength = ""
 directory = os.getcwd()
 for file in os.listdir(directory):
-    if file.endswith(tuple(filetypes)):
+    if file.endswith(tuple(audiotypes)):
         files.append(file)
         forplaylist.append(file)
 x = 0
@@ -236,65 +339,61 @@ def shuffle():
     random.shuffle(files)
     play()
 
-def setpos(position):
-    pygame.mixer.music.set_pos(position)
-
 def play():
     global playing, lastplayed, x, forlength
-    
-    try:
-        if loop != True:
-            try:
-                for file in files:
-                    playing = files[x] + "       "
-                    forlength = files[x]
-                    pygame.mixer.music.unload()
-                    pygame.mixer.music.load(files[x])
-                    if not zz.paused:
+    if not paused:
+        try:
+            if loop != True:
+                try:
+                    for file in files:
+                        playing = files[x] + "       "
+                        forlength = files[x]
+                        pygame.mixer.music.unload()
+                        pygame.mixer.music.load(files[x])
+                        if not zz.paused:
+                            pygame.mixer.music.play()
+                        x += 1
+                        break
+                except IndexError:
+                    print(f"{sprefix} Songs have ended.\033[0m")
+                except Exception as e:
+                    print(f"{sprefix} unexpected error! \n{e}\033[0m")
+            else:
+                try:
+                    for file in files:
+                        playing = files[x] + "       "
+                        forlength = files[x]
+                        pygame.mixer.music.unload()
+                        pygame.mixer.music.load(files[x])
                         pygame.mixer.music.play()
-                    x += 1
-                    break
-            except IndexError:
-                print(f"{sprefix} Songs have ended.\033[0m")
-            except Exception as e:
-                print(f"{sprefix} unexpected error! \n{e}\033[0m")
-        else:
-            try:
-                for file in files:
-                    playing = files[x] + "       "
-                    forlength = files[x]
-                    pygame.mixer.music.unload()
-                    pygame.mixer.music.load(files[x])
-                    pygame.mixer.music.play()
-                    x += 1
-                    break
-            except IndexError:
-                x = 0
-                play()
-            except Exception as e:
-                print(f"{sprefix} unexpected error! \n{e}\033[0m")
-    except pygame.error: 
-        print(f"{sprefix} Your media file is corrupt.\033[0m")
-
+                        x += 1
+                        break
+                except IndexError:
+                    x = 0
+                    play()
+                except Exception as e:
+                    print(f"{sprefix} unexpected error! \n{e}\033[0m")
+        except pygame.error: 
+            print(f"{sprefix} Your media file is corrupt.\033[0m")
 play()
-
 def previous():
     global forlength
-    try:
-        global playing, lastplayed, x, forlength
-        for file in files:
-            x -= 1
-            playing = files[x]
-            forlength = files[x]
-            pygame.mixer.music.unload()
-            time.sleep(0.1)
-            pygame.mixer.music.load(files[x])
-            pygame.mixer.music.play()
-            break
-        playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
-        print(playingmessage)
-    except pygame.error: 
-        print(f"{sprefix} Your media file is corrupt.\033[0m")
+    if not paused:
+        try:
+            global playing, lastplayed, x, forlength
+            for file in files:
+                x -= 1
+                playing = files[x]
+                forlength = files[x]
+                pygame.mixer.music.unload()
+                time.sleep(0.1)
+                pygame.mixer.music.load(files[x])
+                pygame.mixer.music.play()
+                break
+            playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+            print(playingmessage)
+        except pygame.error: 
+            print(f"{sprefix} Your media file is corrupt.\033[0m")
 playlistfiles = []
 
 def create_playlist(songs : list, playlistname):
@@ -325,13 +424,14 @@ def create_playlist(songs : list, playlistname):
             else:
                 print(f"{sprefix} Aborting...")
                 exit()
-    except:
+    except FileNotFoundError:
         f = open(playlistname + ".playlist", "a")
         for _ in songs:
             f.write(_ + "\n")
         f.close()
         print(f"{sprefix} Playlist successfully generated.\033[0m")
-
+    except:
+        print("%s \033[31m%s" % (sprefix, Exception))
 def read_playlist(playlist : file):
     global files
     pygame.mixer.music.unload()
@@ -341,12 +441,16 @@ def read_playlist(playlist : file):
         line = line.replace("\n", "")
         files.append(line)
         print(f"{sprefix} Song number {count} ({line}) has been queued.\033[0m")
-        
+    if not paused:
+        play()
+        playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+        print(playingmessage)
 def skip():
     global forlength
-    play()
-    playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
-    print(playingmessage)
+    if not paused:
+        play()
+        playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
+        print(playingmessage)
 
 class CustomTkinter(customtkinter.CTk):
     def __init__(self):
@@ -408,6 +512,10 @@ class CustomTkinter(customtkinter.CTk):
         self.playlisticon = customtkinter.CTkImage(
             light_image=Image.open(os.path.join(image_path, "playlist.png")),
         )
+        self.searchicon = customtkinter.CTkImage(
+            light_image=Image.open(os.path.join(image_path, "search.png"))
+        )
+        self.audioicon = customtkinter.CTkImage(light_image=Image.open(os.path.join(image_path, "audio.png")))
         self.Streaming = customtkinter.CTkButton(
             self.navigation_frame,
             image=self.streamingicon,
@@ -424,11 +532,10 @@ class CustomTkinter(customtkinter.CTk):
         self.Streaming.grid(row=1, column=0, sticky="ew")
         self.Downloading = customtkinter.CTkButton(
             self.navigation_frame,
-            image=self.downloadicon,
             corner_radius=0,
             height=40,
             border_spacing=10,
-            text="Download Songs",
+            text="Coming Soon",
             fg_color="transparent",
             hover_color=("gray70", "gray30"),
             text_color=("gray10", "gray90"),
@@ -530,8 +637,7 @@ class CustomTkinter(customtkinter.CTk):
             width=16,
             hover_color=rgb(50, 50, 50),
             command=self.playSong,
-        )
-        self.Play.place(x=250, y=14)
+        ); self.Play.place(x=250, y=14)
         self.Skip = customtkinter.CTkButton(
             self.frame1,
             image=self.skip,
@@ -571,15 +677,30 @@ class CustomTkinter(customtkinter.CTk):
             self.frame1,
             placeholder_text="Input song/audio query",
             width=400
-        ); self.Search.place(relx=0.045, rely=0.37)
+        ); self.Search.place(relx=0.052, rely=0.37)
         self.Confirm = customtkinter.CTkButton(
             self.frame1,
-            fg_color=rgb(50,50,50),
-            hover_color=rgb(30,30,30),
-            text="Search",
-            width=90,
+            image=self.searchicon,
+            corner_radius=10,
+            border_spacing=1,
+            width=48,
+            hover_color=rgb(50, 50, 50),
+            fg_color=rgb(30, 30, 30),
+            text="",
             command=self.search
-        ); self.Confirm.place(relx=0.79, rely=0.37)
+        ); self.Confirm.place(relx=0.772, rely=0.37)
+        self.download = customtkinter.CTkButton(
+            self.frame1,
+            image=self.downloadicon,
+            corner_radius=10,
+            border_spacing=1,
+            width=48,
+            hover_color=rgb(50, 50, 50),
+            fg_color=rgb(30, 30, 30),
+            text="",
+            command=self.downloada,
+        )
+        self.download.place(relx=0.865, rely=0.37)
         self.spyracyl1 = customtkinter.CTkLabel(
             text="", master=self.frame1, image=self.sPYracy, corner_radius=10
         )
@@ -597,14 +718,7 @@ class CustomTkinter(customtkinter.CTk):
         self.spyracyl2.place(x=5, y=210)
         self.spyracyl3.place(x=5, y=210)
         self.spyracyl4.place(x=5, y=210)
-        
-        self.flacdownloader = customtkinter.CTkEntry(
-            self.frame2,
-            placeholder_text=f"Enter name of the {filetype}(s) to download (seperate with ':').",
-            width=500,
-            height=30,
-        )
-        self.flacdownloader.place(x=25, y=30)
+    
         self.filetype = customtkinter.CTkOptionMenu(
             self.frame3,
             values=filetypes,
@@ -667,19 +781,6 @@ class CustomTkinter(customtkinter.CTk):
             command=self.create_startup
         ); self.RecreateStartup.place(relx=0.85, rely=0.3, anchor=customtkinter.CENTER)
         self.workingdir.pack()
-        self.download = customtkinter.CTkButton(
-            self.frame2,
-            image=self.downloadicon,
-            corner_radius=10,
-            height=40,
-            border_spacing=1,
-            width=500,
-            hover_color=rgb(50, 50, 50),
-            fg_color=rgb(30, 30, 30),
-            text="Download",
-            command=self.downloada,
-        )
-        self.download.place(x=25, y=90)
         self.values = customtkinter.CTkComboBox(
             self.frame4,
             width=500,
@@ -715,22 +816,73 @@ class CustomTkinter(customtkinter.CTk):
             button_hover_color=("gray70", "gray30"),
             width=252,
             to=self.get_duration(forlength),
+            #command=None
             command=self.setpos
         ); self.Timeslider.place(x=147, y=60)
-        self.update()
+        self.tm = customtkinter.CTkLabel(
+            self.frame1,
+            text="00:00",
+            font=customtkinter.CTkFont("Arial", 15, "bold")
+        ); self.tm.place(x=401, y=55)
+        self.VolumePic = customtkinter.CTkButton(
+            self.frame1,
+            image=self.audioicon,
+            text="",
+            fg_color="transparent",
+            width=16,
+            hover_color=rgb(50, 50, 50),
+            command=self.toggleMuted
+        ); self.VolumePic.place(x=1, y=20)
+        self.Volume = customtkinter.CTkSlider(
+            self.frame1,
+            orientation="vertical",
+            height=150,
+            bg_color="transparent",
+            fg_color=rgb(150,150,150),
+            button_color=rgb(30,30,30),
+            button_hover_color=("gray70", "gray30"),
+            from_=0,
+            to=1,
+            command=self.setVolume
+        )
+        self.Volume.place(x=10, y=55)
+        self.Volume.set(1)
+        self.updatehastoberenamed()
         self.isclipause()
-        self.update_slider()
         self.updatePresence()
+        self.u()
+    def toggleMuted(self):
+        if pygame.mixer.music.get_volume == 0: pygame.mixer.music.set_volume(1); return
+        pygame.mixer_music.set_volume(0)
+    def setVolume(self, volume):
+        pygame.mixer.music.set_volume(volume)
+    def u(self):
+        global moving
+        if moving == False:
+            self.Timeslider.set(pygame.mixer.music.get_pos() / 1000)
+
+        threading.Timer(0.5, self.u).start()
     def xpressed(self):
         os._exit(1)
     def get_duration(self, song):
         with audioread.audio_open(song) as au:
             return au.duration
     def setpos(self, position):
+        global scrolling
         try:
+            scrolling = True
+            print(pygame.mixer.music.get_pos())
+            print(pygame.mixer_music.get_pos())
+            pygame.mixer.music.rewind()
             pygame.mixer.music.set_pos(position)
+            print(pygame.mixer.music.get_pos())
+            print(pygame.mixer_music.get_pos())
+            
+            self.updatePresence
+            time.sleep(0.1)
+            scrolling = False
         except pygame.error:
-            pass ##// Stops pygame from saying "music isnt playing" (its not the best extension!)
+            pass
     def togglestartup(self):
         appdata = os.getenv("Appdata")
         dir = f"{appdata}/Microsoft/Windows/Start Menu/Programs/Startup"
@@ -753,23 +905,55 @@ class CustomTkinter(customtkinter.CTk):
                 print(f"{sprefix} Startup file created/enabled.\033[0m")
     def updatePresence(self):
         global RPC
+        bs = pygame.mixer.music.get_pos() / 1000
+        mins = bs / 60 
+        m = int(mins) 
+        secs = str(int(bs - (m * 60)))
+        if len(secs) <= 1: secs = f"0{secs}"
+        self.tm.configure(text=f"{str(m)}:{str(secs)}/{get_duration(forlength)}")
         bigimage = "https://avatars.githubusercontent.com/u/125816677?v=4"
         smallimage = "https://raw.githubusercontent.com/GogleSiteBank/sPYracy/main/online-64.png"
         buttoncontent = [{"label": "Download sPYracy", "url": "https://github.com/GogleSiteBank/sPYracy/releases/latest/download/sPYracy.zip"}]
-        state = "Listening on sPYracy:"
+        state = f"Listening on sPYracy: {str(m)}:{str(secs)}/{get_duration(forlength)}"
         song = forlength
-        RPC.update(large_image=bigimage,small_image=smallimage, buttons=buttoncontent, state=song, details=state)
-        threading.Timer(15, self.updatePresence).start()
+        facts = [
+            "Me and Saul came up with sPYracy whilst searching for a better flac site!",
+            "The original TUI sPYracy is found on my GitHub!",
+            "The name sPYracy is Spotify + Python + Piracy.",
+            "sPYracy is over 1000 lines of code!",
+            "sPYracy is open source and frequently updated!",
+            'sPYracy\'s original name was "Spiracy".',
+            "sPYracy was going to be converted to C, called SpiraC",
+            "Music should always be free.",
+            "sPYracy will never charge, use linkvertise or advertisements.",
+            "Want an alternative to Spotify, I can always guarantee free is cheaper then discounted!",
+            "Free music or something idk",
+            "Press the download button!!!!!",
+            "Free robux"
+        ]
+        button1fact = random.choice(facts)
+        button2fact = random.choice(facts)
+        try:
+            RPC.update(large_image=bigimage,small_image=smallimage, large_text=button1fact, small_text=button2fact, buttons=buttoncontent, state=song, details=state)
+        except:
+            pass
+        threading.Timer(0.1, self.updatePresence).start()
     def Openplaylist(self):
+        global files, x
         files.clear()
-        file = filedialog.askopenfilename()
-        read_playlist(file)
-        self.playSong()
+        try:
+            file = filedialog.askopenfilename(filetypes=[("sPYracy Playlists", "*.playlist"), ("Custom Playlists", "*.*")])
+            self.title(f"sPYracy v{version} - {file}")
+            self.update()
+            x = 0 
+            read_playlist(file)
+        except FileNotFoundError:
+            print(f"{sprefix} Operation aborted.\033[0m")
     def submitplaylist(self):
-        global playlistfiles
+        
         name = self.playlistname.get()
         create_playlist(playlistfiles, name)
-        playlistfiles.clear
+        playlistfiles.clear()
     def playlist(self, song):
         global playlistfiles
         playlistfiles.append(song)
@@ -809,15 +993,20 @@ class CustomTkinter(customtkinter.CTk):
         print(f"{sprefix} Entering \"{i}\" would download the song/audio : \"{final}\"\033[0m")
         
     def forcesong(self, song):
-        global files, forlength
+        global files, forlength, x
+        x = files.index(forlength)
+        
         files.clear()
         files.append(song)
         play()
         files.clear()
         for file in os.listdir():
-            if file.endswith(tuple(filetypes)):
+            if file.endswith(tuple(audiotypes)):
                 files.append(file)
+                forplaylist.append(file)
+        self.playlists
         self.force.configure(values=files)
+        self.playlist
         self.force.set("Force Song")
         playingmessage = f"{sprefix} Song \"{forlength}\" is now playing. \033[0m"
         print(playingmessage)
@@ -826,10 +1015,12 @@ class CustomTkinter(customtkinter.CTk):
         pygame.mixer.music.unload()
         files.clear()
         for file in os.listdir():
-            if file.endswith(tuple(filetypes)):
+            if file.endswith(tuple(audiotypes)):
                 files.append(file)
+                forplaylist.append(file)
         if paused == False: play()
         self.force.configure(values=files)
+        self.values.configure(values=forplaylist)
     def loop(self):
         global loop
         loop = not loop
@@ -843,20 +1034,21 @@ class CustomTkinter(customtkinter.CTk):
             os.chdir(dir)
             files.clear()
             for file in os.listdir():
-                if file.endswith(tuple(filetypes)):
+                if file.endswith(tuple(audiotypes)):
                     files.append(file)
             print(f"{sprefix} Working Directory has been changed: %s\033[0m" % os.getcwd())
             self.workingdir.configure(text=f"Working Directory: {os.getcwd()}\033[0m")
             if paused == False: play()
+            self.load()
         except:
             print(f"{sprefix} Operation aborted\033[0m")
 
     def shuffleExec(self):
         shuffle()
 
-    def update(self):
+    def updatehastoberenamed(self):
         try:
-            threading.Timer(0.1, self.update).start()
+            threading.Timer(0.1, self.updatehastoberenamed).start()
             self.Playing.configure(text=f"Currently Playing:\n {playing}")
         except RuntimeError:
             sys.exit(0)
@@ -866,8 +1058,11 @@ class CustomTkinter(customtkinter.CTk):
         self.getBusy()
 
     def update_slider(self):
-        self.Timeslider.configure(to=self.get_duration(forlength))
-        threading.Timer(0.05, self.update_slider).start()
+        try:
+            if (scrolling == False):
+                self.Timeslider.configure(to=self.get_duration(forlength))
+        except: pass
+        threading.Timer(1)
 
     def playSong(self):
         global paused
@@ -879,6 +1074,7 @@ class CustomTkinter(customtkinter.CTk):
             paused = True
             self.Play.configure(image=self.play)
             pygame.mixer.music.pause()
+        self.updatePresence
         self.force.configure(values=files)
 
     def isclipause(self):
@@ -891,7 +1087,7 @@ class CustomTkinter(customtkinter.CTk):
             files.clear()
             os.chdir(zz.dir)
             for file in os.listdir():
-                if file.endswith(tuple(filetypes)):
+                if file.endswith(tuple(audiotypes)):
                     files.append(f"{dir}/" + file)
     def previousSong(self):
         try:
@@ -899,10 +1095,12 @@ class CustomTkinter(customtkinter.CTk):
                 previous()
         except:
             previous()
+        self.updatePresence
         self.force.configure(values=files)
 
     def skipSong(self):
         skip()
+        self.updatePresence
         self.force.configure(values=files)
 
     def showFrame(self, name):
@@ -969,7 +1167,7 @@ class CustomTkinter(customtkinter.CTk):
         global forlength
         if paused == False:
             if pygame.mixer.music.get_busy():
-                pass
+                get_duration(forlength)
             else:
                 if len(forlength) > 0:
                     play()
@@ -1015,7 +1213,7 @@ class CustomTkinter(customtkinter.CTk):
         global toDownload
         pos = 0
         toDownload.clear()
-        text = self.flacdownloader.get()
+        text = self.Search.get()
         if ":" in text:
             toDownload.clear()
             for s in text.split(":"):
